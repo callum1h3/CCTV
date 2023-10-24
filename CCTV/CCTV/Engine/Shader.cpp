@@ -11,6 +11,7 @@ using namespace Engine;
 
 std::vector<Shader*> ShaderManager::shader_copies;
 std::map<std::string, Shader> ShaderManager::shaders;
+std::vector<GlobalStorage> ShaderManager::global_storage;
 std::map<std::string, bool> ShaderManager::pp_definitions;
 
 void ShaderManager::Initialize()
@@ -51,6 +52,36 @@ void ShaderManager::Refresh()
         Shader* shader = &it->second;
         shader->Compile();
     }
+}
+
+void ShaderManager::GiveAllStorageToShader(Shader* shader)
+{
+    for (GlobalStorage storage : global_storage)
+        GiveStorageToShader(storage, shader);
+}
+
+void ShaderManager::CreateGlobalStorage(std::string name, unsigned int buffer, unsigned int size, unsigned int location)
+{
+    glBindBufferRange(GL_UNIFORM_BUFFER, location, buffer, 0, size);
+
+    GlobalStorage storage = GlobalStorage();
+    storage.buffer = buffer;
+    storage.name = name;
+    storage.location = location;
+
+    global_storage.push_back(storage);
+
+    for (const auto& [key, value] : shaders)
+        GiveStorageToShader(storage, &shaders[key]);  
+
+    Debug::Log("Successfully created global storage named " + name + "!");
+}
+
+void ShaderManager::GiveStorageToShader(GlobalStorage storage, Shader* shader)
+{
+    //shader->Use();
+
+    glUniformBlockBinding(shader->GetID(), storage.buffer, shader->UniformGetLocation(storage.name.c_str()));
 }
 
 void ShaderManager::GetShaders(void (*ptr)(Shader*))
@@ -260,6 +291,8 @@ void Shader::Compile()
         return;
     }
 
+    ShaderManager::GiveAllStorageToShader(this);
+
     Debug::Log("Successfully Compiled Shader Program: " + GetName() + "!");
 }
 
@@ -274,6 +307,11 @@ void Shader::Compute(GLuint num_groups_x, GLuint num_groups_y, GLuint num_groups
     glDispatchCompute(num_groups_x, num_groups_y, num_groups_z);
 }
 
+unsigned int Shader::UniformGetLocation(const char* name)
+{
+    return glGetUniformLocation(this->id, name);
+}
+
 void Shader::UniformSetImage(unsigned location, int id)
 {
     Use();
@@ -282,9 +320,26 @@ void Shader::UniformSetImage(unsigned location, int id)
 
 void Shader::UniformSetImage(const char* name, int id)
 {
-    UniformSetImage(glGetUniformLocation(this->id, name), id);
+    UniformSetImage(UniformGetLocation(name), id);
 }
 
+void Shader::UniformSetVec2(unsigned location, glm::vec2 input)
+{
+    Use();
+    glUniform2f(location, input.x, input.y);
+}
+
+void Shader::UniformSetVec3(unsigned location, glm::vec3 input)
+{
+    Use();
+    glUniform3f(location, input.x, input.y, input.z);
+}
+
+void Shader::UniformSetVec4(unsigned location, glm::vec4 input)
+{
+    Use();
+    glUniform4f(location, input.x, input.y, input.z, input.w);
+}
 
 void Shader::SetName(std::string name)
 {

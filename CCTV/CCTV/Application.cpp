@@ -3,6 +3,8 @@
 #include "Engine/Renderer.h"
 #include "Engine/OSHandler.h"
 #include "Engine/Shader.h"
+#include "Engine/Input.h"
+#include "Engine/Time.h"
 
 Engine::Window Application::window;
 
@@ -20,10 +22,17 @@ void Application::Run()
 	Engine::OSHandler::Initialize();
 	Engine::ShaderManager::Initialize();
 	Engine::Renderer::Init();
+	Engine::Input::Initialize();
+	
 
 	while (!window.ShouldClose())
 	{
+		glClearColor(0, 0, 0, 1);
+		glClear(GL_COLOR_BUFFER_BIT);
+
 		window.PollEvents();
+
+		Engine::Time::Update();
 
 		Engine::Renderer::Render();
 

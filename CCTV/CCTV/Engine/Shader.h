@@ -6,6 +6,7 @@
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include "glm/glm.hpp"
 
 namespace Engine
 {
@@ -34,8 +35,12 @@ namespace Engine
 		std::string GetName();
 		unsigned int GetID();
 
+		unsigned int UniformGetLocation(const char* name);
 		void UniformSetImage(unsigned location, int id);
 		void UniformSetImage(const char* name, int id);
+		void UniformSetVec2(unsigned location, glm::vec2 input);
+		void UniformSetVec3(unsigned location, glm::vec3 input);
+		void UniformSetVec4(unsigned location, glm::vec4 input);
 
 		std::vector<ShaderProgram> programs;
 	private:
@@ -45,6 +50,14 @@ namespace Engine
 
 		static std::string ProcessCode(std::string a);
 		static std::string IncludeLib(std::string path);
+	};
+
+	struct GlobalStorage
+	{
+	public:
+		std::string name;
+		unsigned int buffer;
+		unsigned int location;
 	};
 
 	class __declspec(dllexport) ShaderManager
@@ -61,9 +74,14 @@ namespace Engine
 		static void SetDefinition(std::string def, bool o);
 		static void GetShaders(void (*ptr)(Shader*));
 
+		static void CreateGlobalStorage(std::string name, unsigned int buffer, unsigned int size, unsigned int location);
+		static void GiveAllStorageToShader(Shader* shader);
+		static void GiveStorageToShader(GlobalStorage storage, Shader* shader);
+
 	private:
 		static std::vector<Shader*> shader_copies;
 		static std::map<std::string, Shader> shaders;
+		static std::vector< GlobalStorage> global_storage;
 		static std::map<std::string, bool> pp_definitions;
 	};
 }

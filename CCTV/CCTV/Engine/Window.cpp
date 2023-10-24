@@ -2,6 +2,11 @@
 
 using namespace Engine;
 
+static void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+{
+
+}
+
 // Creating a normal window.
 bool Window::Init()
 {
@@ -15,6 +20,8 @@ bool Window::Init()
 
 	if (!_window)
 		return false;
+
+	glfwSetFramebufferSizeCallback(_window, framebuffer_size_callback);
 
 	MakeCurrentContext();
 	return true;
