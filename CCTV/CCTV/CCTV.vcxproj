@@ -139,6 +139,8 @@
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="CCTV.cpp" />
     <ClCompile Include="Engine\Input.cpp" />
+    <ClCompile Include="Engine\MathHelper.cpp" />
+    <ClCompile Include="Engine\Message.cpp" />
     <ClCompile Include="Engine\OSHandler.cpp" />
     <ClCompile Include="Engine\Renderer.cpp" />
     <ClCompile Include="Engine\Shader.cpp" />
@@ -149,6 +151,8 @@
     <ClInclude Include="Application.h" />
     <ClInclude Include="Engine\Debug.h" />
     <ClInclude Include="Engine\Input.h" />
+    <ClInclude Include="Engine\MathHelper.h" />
+    <ClInclude Include="Engine\Message.h" />
     <ClInclude Include="Engine\OpenGL.h" />
     <ClInclude Include="Engine\OSHandler.h" />
     <ClInclude Include="Engine\Renderer.h" />

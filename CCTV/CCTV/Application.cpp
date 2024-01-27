@@ -23,8 +23,9 @@ void Application::Run()
 	Engine::ShaderManager::Initialize();
 	Engine::Renderer::Init();
 	Engine::Input::Initialize();
-	
 
+	glEnable(GL_MULTISAMPLE);
+	
 	while (!window.ShouldClose())
 	{
 		glClearColor(0, 0, 0, 1);
@@ -35,6 +36,8 @@ void Application::Run()
 		Engine::Time::Update();
 
 		Engine::Renderer::Render();
+
+		Engine::Renderer::EndRender();
 
 		glfwSwapBuffers(window.Get());
 	}

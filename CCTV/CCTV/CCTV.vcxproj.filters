@@ -48,6 +48,12 @@
     <ClCompile Include="Engine\Time.cpp">
       <Filter>Source Files\Engine</Filter>
     </ClCompile>
+    <ClCompile Include="Engine\Message.cpp">
+      <Filter>Source Files\Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\MathHelper.cpp">
+      <Filter>Source Files\Engine</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h">
@@ -75,6 +81,12 @@
       <Filter>Source Files\Engine</Filter>
     </ClInclude>
     <ClInclude Include="Engine\Time.h">
+      <Filter>Source Files\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Message.h">
+      <Filter>Source Files\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\MathHelper.h">
       <Filter>Source Files\Engine</Filter>
     </ClInclude>
   </ItemGroup>
