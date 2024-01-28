@@ -5,6 +5,7 @@
 #include "Engine/Shader.h"
 #include "Engine/Input.h"
 #include "Engine/Time.h"
+#include "Engine/Resources.h"
 
 Engine::Window Application::window;
 
@@ -42,6 +43,7 @@ void Application::Run()
 		glfwSwapBuffers(window.Get());
 	}
 
+	Engine::Resources::Clear();
 	Engine::Renderer::Dispose();
 	Engine::ShaderManager::OnExit();
 	window.Dispose();

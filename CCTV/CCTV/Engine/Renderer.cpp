@@ -190,6 +190,8 @@ void Renderer::Render()
 
 	Message::Render();
 
+
+
 }
 
 void Renderer::DrawUI()
