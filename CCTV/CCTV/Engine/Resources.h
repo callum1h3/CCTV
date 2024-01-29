@@ -22,7 +22,8 @@ namespace Engine
 			{
 				std::string fullpath = OSHandler::GetPath() + "/resources/" + path;
 
-				ResourceObject* resource = new T*();
+				T* t_resource = new T();
+				ResourceObject* resource = (ResourceObject*)t_resource;
 				resource->Load(fullpath);
 
 				storage[path] = resource;

@@ -40,6 +40,8 @@ namespace Engine
 		static glm::vec2 viewPosition, viewLerped;
 		static float zoom, currentzoom;
 
+		static unsigned int background_size;
+
 		static Font LoadFont(std::string fontname);
 		static float GetTextWidth(std::string font, float scale, std::string text);
 		static void DrawTextA(glm::vec2 position, glm::vec4 color, float scale, Font font, std::string text);
@@ -58,6 +60,7 @@ namespace Engine
 		static Shader* UIShader;
 		static Shader* TextShader;
 		static Shader* screenShader;
+		static Shader* backgroundShader;
 		static FT_Library ft;
 
 		static unsigned int UI_UBO;

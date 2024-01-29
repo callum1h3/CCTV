@@ -13,6 +13,7 @@ namespace Engine
 
         void Set(unsigned char* data);
 
+        unsigned int GetBuffer();
         int GetWidth();
         int GetHeight();
         bool IsValid();

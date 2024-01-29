@@ -19,6 +19,9 @@
     <Filter Include="Source Files\Libs">
       <UniqueIdentifier>{f813ac6f-e10b-461c-8fe6-e1652c3afac0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Engine\Types">
+      <UniqueIdentifier>{21dec892-ae18-4a90-8c92-336a9614ce41}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CCTV.cpp">
@@ -54,6 +57,12 @@
     <ClCompile Include="Engine\MathHelper.cpp">
       <Filter>Source Files\Engine</Filter>
     </ClCompile>
+    <ClCompile Include="Engine\Resources.cpp">
+      <Filter>Source Files\Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Types\Texture2D.cpp">
+      <Filter>Source Files\Engine\Types</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h">
@@ -88,6 +97,12 @@
     </ClInclude>
     <ClInclude Include="Engine\MathHelper.h">
       <Filter>Source Files\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Resources.h">
+      <Filter>Source Files\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Types\Texture2D.h">
+      <Filter>Source Files\Engine\Types</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

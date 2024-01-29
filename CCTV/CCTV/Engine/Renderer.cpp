@@ -12,6 +12,8 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "Message.h"
 #include "MathHelper.h"
+#include "Resources.h"
+#include "Types/Texture2D.h"
 
 using namespace Engine;
 
@@ -23,11 +25,13 @@ unsigned int Renderer::quadVAO, Renderer::quadVBO;
 unsigned int Renderer::fontVAO, Renderer::fontVBO;
 unsigned int Renderer::screenQuadVAO, Renderer::screenQuadVBO;
 
+unsigned int Renderer::background_size;
+
 // Shaders
 Shader* Renderer::UIShader;
 Shader* Renderer::TextShader;
 Shader* Renderer::screenShader;
-
+Shader* Renderer::backgroundShader;
 
 glm::ivec2 Renderer::lastWindowSize;
 FT_Library Renderer::ft;
@@ -69,6 +73,13 @@ void Renderer::Init()
 	UIShader = ShaderManager::GetShader("ui");
 	TextShader = ShaderManager::GetShader("text");
 	screenShader = ShaderManager::GetShader("screen");
+	backgroundShader = ShaderManager::GetShader("background");
+
+	background_size = backgroundShader->UniformGetLocation("WindowSize");
+
+	// Setting texture as repeating
+	Texture2D* background_texture = Resources::Load<Texture2D>("keylol.png");
+
 
 	// Creating Quad Buffer
 	glGenVertexArrays(1, &quadVAO);
@@ -167,13 +178,19 @@ void Renderer::Render()
 	glm::vec2 min = ScreenMin();
 	glm::vec2 max = ScreenMax();
 
-	
-
-
 	// Capturing data into framebuffer
 	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 	glClearColor(0.0f, 0.019f, 0.050f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	
+	// Displaying frame buffer texture onto screen.
+	backgroundShader->Use();
+	backgroundShader->UniformSetVec2(background_size, newSize);
+	glBindVertexArray(screenQuadVAO);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, Resources::Load<Texture2D>("keylol.png")->GetBuffer());
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+
 
 	glm::mat4 moveableProjection = glm::ortho(min.x, max.x, min.y, max.y);
 	glBindBuffer(GL_UNIFORM_BUFFER, UI_UBO);
@@ -182,7 +199,6 @@ void Renderer::Render()
 
 	DrawUI();
 	
-
 	glm::mat4 screenProjection = glm::ortho(0.0f, (float)lastWindowSize.x, 0.0f, (float)lastWindowSize.y);
 	glBindBuffer(GL_UNIFORM_BUFFER, UI_UBO);
 	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), &screenProjection);
