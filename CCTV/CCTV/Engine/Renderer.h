@@ -7,6 +7,8 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H 
 
+#include "Types/Texture2D.h"
+
 namespace Engine
 {
 	struct Character {
@@ -46,7 +48,7 @@ namespace Engine
 		static float GetTextWidth(std::string font, float scale, std::string text);
 		static void DrawTextA(glm::vec2 position, glm::vec4 color, float scale, Font font, std::string text);
 		static void DrawTextA(glm::vec2 position, glm::vec4 color, float scale, std::string font, std::string text);
-		static void DrawRect(glm::vec2 position, glm::vec2 size, glm::vec4 color);
+		static void DrawRect(glm::vec2 position, glm::vec2 size, glm::vec4 color, Texture2D* texture = nullptr);
 		static bool IsMouseWithinBounds(glm::vec2 start, glm::vec2 end);
 		static glm::vec2 PixelToScreen(glm::vec2 input);
 	private:

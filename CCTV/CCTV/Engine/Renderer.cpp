@@ -13,7 +13,6 @@
 #include "Message.h"
 #include "MathHelper.h"
 #include "Resources.h"
-#include "Types/Texture2D.h"
 
 using namespace Engine;
 
@@ -223,6 +222,7 @@ void Renderer::DrawUI()
 
 	Renderer::DrawRect(glm::vec2(0, 0), glm::vec2(32, 32), color);
 
+	Renderer::DrawRect(glm::vec2(128, 0), glm::vec2(32, 32), color);
 
 	//DrawRect(glm::vec2(0, 0), glm::vec2(font.GetTextWidth(0.25f, "Hello"), font.height * 0.25f), glm::vec4(1.0f, 0.1f, 0.1f, 1));
 
@@ -469,13 +469,18 @@ void Renderer::DrawTextA(glm::vec2 position, glm::vec4 color, float scale, std::
 	DrawTextA(position, color, scale, f, text);
 }
 
-void Renderer::DrawRect(glm::vec2 position, glm::vec2 size, glm::vec4 color)
+void Renderer::DrawRect(glm::vec2 position, glm::vec2 size, glm::vec4 color, Texture2D* texture)
 {
+	if (texture == nullptr)
+		texture = Resources::Load<Texture2D>("default.png");
+
 	UIShader->UniformSetVec2(2, position);
 	UIShader->UniformSetVec2(3, size);
 	UIShader->UniformSetVec4(4, color);
 	UIShader->Use();
 	glBindVertexArray(quadVAO);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture->GetBuffer());
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
