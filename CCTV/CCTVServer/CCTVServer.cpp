@@ -1,7 +1,6 @@
-#include "Server.h"
+#include <iostream>
 
 int main()
 {
-	Server server;
-	server.Run();
+	std::cout << "hi\n";
 }
