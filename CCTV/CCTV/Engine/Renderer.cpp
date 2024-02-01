@@ -41,6 +41,9 @@ unsigned int Renderer::UI_UBO;
 
 std::unordered_map<std::string, Font> Renderer::fonts;
 
+static std::string* inputUsing = nullptr;
+static bool hasUsedInput = false;
+
 const float screenQuadVertices[] = {
 	// positions   // texCoords
 	-1.0f,  1.0f,  0.0f, 1.0f,
@@ -77,7 +80,8 @@ void Renderer::Init()
 	background_size = backgroundShader->UniformGetLocation("WindowSize");
 
 	// Setting texture as repeating
-	Texture2D* background_texture = Resources::Load<Texture2D>("keylol.png");
+	Texture2D* background_texture = Resources::Load<Texture2D>("background.png");
+	background_texture->SetFilter(GL_NEAREST);
 
 
 	// Creating Quad Buffer
@@ -142,6 +146,7 @@ void Renderer::Init()
 
 void Renderer::Render()
 {
+	hasUsedInput = false;
 	Window* window = Application::GetWindow();
 
 	glm::ivec2 newSize = window->GetSize();
@@ -174,6 +179,8 @@ void Renderer::Render()
 
 	currentzoom = MathHelper::lerp(currentzoom, zoom, Time::DeltaTime() * 8.0f);
 
+	
+
 	glm::vec2 min = ScreenMin();
 	glm::vec2 max = ScreenMax();
 
@@ -184,10 +191,12 @@ void Renderer::Render()
 	
 	// Displaying frame buffer texture onto screen.
 	backgroundShader->Use();
-	backgroundShader->UniformSetVec2(background_size, newSize);
+	backgroundShader->UniformSetVec2(10, newSize);
+	backgroundShader->UniformSetVec2(11, viewLerped);
+	backgroundShader->UniformSetFloat(12, currentzoom);
 	glBindVertexArray(screenQuadVAO);
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, Resources::Load<Texture2D>("keylol.png")->GetBuffer());
+	glBindTexture(GL_TEXTURE_2D, Resources::Load<Texture2D>("background.png")->GetBuffer());
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 
 
@@ -206,8 +215,11 @@ void Renderer::Render()
 	Message::Render();
 
 
-
+	if (!hasUsedInput)
+		inputUsing = nullptr;
 }
+
+static std::string hi = "hi";
 
 void Renderer::DrawUI()
 {
@@ -227,6 +239,8 @@ void Renderer::DrawUI()
 	//DrawRect(glm::vec2(0, 0), glm::vec2(font.GetTextWidth(0.25f, "Hello"), font.height * 0.25f), glm::vec4(1.0f, 0.1f, 0.1f, 1));
 
 	//DrawTextA(glm::vec2(0, 0), glm::vec4(1,1,1,1), 0.25f, font, "Hello");
+
+	DrawTextInput(glm::vec2(0, 0), 0.25f, &hi, font);
 }
 
 void Renderer::EndRender()
@@ -356,8 +370,8 @@ Font Renderer::LoadFont(std::string fontname)
 			// set texture options
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 			// now store character for later use
 			Character character = {
 				texture,
@@ -502,4 +516,49 @@ float Font::GetTextWidth(float scale, std::string text)
 	}
 
 	return width;
+}
+
+static bool keyDown = false;
+void Renderer::DrawTextInput(glm::vec2 position, float scale, std::string* output, Font font)
+{
+	int state = Input::GetMouse(GLFW_MOUSE_BUTTON_LEFT);
+	float width = font.GetTextWidth(scale, *output);
+	if (width < 32)
+		width = 32;
+
+	bool isInBounds = IsMouseWithinBounds(position, position + glm::vec2(32, 32));
+	std::cout << isInBounds << std::endl;
+	
+
+	if (inputUsing == output)
+	{
+		DrawTextA(position, glm::vec4(1, 1, 1, 1), scale, font, *output);
+		hasUsedInput = true;
+
+		if (state == GLFW_PRESS && !isInBounds)
+		{
+			hasUsedInput = false;
+			inputUsing = nullptr;
+			return;
+		}
+
+		int keyState = Input::GetKey(GLFW_KEY_A);
+		if (keyState == GLFW_PRESS && !keyDown)
+		{
+			output->append("a");
+			keyDown = true;
+		}
+
+		if (keyState == GLFW_RELEASE && keyDown)
+			keyDown = false;
+	}
+	else
+	{
+		DrawTextA(position, glm::vec4(1, 1, 1, 0.8f), scale, font, *output);
+		if (state == GLFW_PRESS && isInBounds)
+		{
+			hasUsedInput = true;
+			inputUsing = output;
+		}
+	}
 }

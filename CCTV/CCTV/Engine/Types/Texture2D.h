@@ -17,6 +17,7 @@ namespace Engine
         int GetWidth();
         int GetHeight();
         bool IsValid();
+        void SetFilter(GLint param);
     private:
         int width, height;
         GLint dataType;

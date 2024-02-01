@@ -341,6 +341,12 @@ void Shader::UniformSetVec4(unsigned location, glm::vec4 input)
     glUniform4f(location, input.x, input.y, input.z, input.w);
 }
 
+void Shader::UniformSetFloat(unsigned location, float input)
+{
+    Use();
+    glUniform1f(location, input);
+}
+
 void Shader::SetName(std::string name)
 {
     this->name = name;

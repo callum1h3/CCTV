@@ -44,6 +44,14 @@ void Texture2D::Set(unsigned char* data)
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
+void Texture2D::SetFilter(GLint param)
+{
+	glBindTexture(GL_TEXTURE_2D, buffer);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, param);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, param);
+	glBindTexture(GL_TEXTURE_2D, 0);
+}
+
 void Texture2D::Dispose()
 {
 	glDeleteTextures(1, &buffer);
