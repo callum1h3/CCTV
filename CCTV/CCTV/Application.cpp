@@ -7,6 +7,8 @@
 #include "Engine/Time.h"
 #include "Engine/Resources.h"
 
+#include "CCTVEngine/CCTVManager.h"
+
 Engine::Window Application::window;
 
 void Application::Run()
@@ -24,6 +26,8 @@ void Application::Run()
 	Engine::ShaderManager::Initialize();
 	Engine::Renderer::Init();
 	Engine::Input::Initialize();
+
+	CCTVManager::OnInitialize();
 
 	glEnable(GL_MULTISAMPLE);
 	

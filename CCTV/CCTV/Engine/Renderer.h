@@ -49,7 +49,7 @@ namespace Engine
 		static void DrawTextA(glm::vec2 position, glm::vec4 color, float scale, Font font, std::string text);
 		static void DrawTextA(glm::vec2 position, glm::vec4 color, float scale, std::string font, std::string text);
 		static void DrawRect(glm::vec2 position, glm::vec2 size, glm::vec4 color, Texture2D* texture = nullptr);
-		static void DrawTextInput(glm::vec2 position, float scale, std::string* output, Font font);
+		static void DrawTextInput(glm::vec2 position, float scale, std::string* output, Font font, int limit);
 		static bool IsMouseWithinBounds(glm::vec2 start, glm::vec2 end);
 		static glm::vec2 PixelToScreen(glm::vec2 input);
 	private:
@@ -74,5 +74,8 @@ namespace Engine
 		static void DrawUI();
 		static void ScrollWheelCallback(GLFWwindow* window, double xoffset, double yoffset);
 		static void CreateFBO();
+		static void TextInputKeyProcess();
+
+
 	};
 }

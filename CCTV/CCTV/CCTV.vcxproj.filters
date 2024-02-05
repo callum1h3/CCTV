@@ -22,6 +22,9 @@
     <Filter Include="Source Files\Engine\Types">
       <UniqueIdentifier>{21dec892-ae18-4a90-8c92-336a9614ce41}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\CCTVEngine">
+      <UniqueIdentifier>{fdb6a1ac-1275-44ec-b5e9-519419745bd2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CCTV.cpp">
@@ -63,6 +66,9 @@
     <ClCompile Include="Engine\Types\Texture2D.cpp">
       <Filter>Source Files\Engine\Types</Filter>
     </ClCompile>
+    <ClCompile Include="CCTVEngine\CCTVManager.cpp">
+      <Filter>Source Files\CCTVEngine</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h">
@@ -103,6 +109,9 @@
     </ClInclude>
     <ClInclude Include="Engine\Types\Texture2D.h">
       <Filter>Source Files\Engine\Types</Filter>
+    </ClInclude>
+    <ClInclude Include="CCTVEngine\CCTVManager.h">
+      <Filter>Source Files\CCTVEngine</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

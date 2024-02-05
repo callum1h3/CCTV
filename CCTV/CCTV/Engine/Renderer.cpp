@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cmath>
 #include <cassert>
+#include <cctype>
 
 #include "../Application.h"
 #include "Input.h"
@@ -13,6 +14,8 @@
 #include "Message.h"
 #include "MathHelper.h"
 #include "Resources.h"
+
+#include "../CCTVEngine/CCTVManager.h"
 
 using namespace Engine;
 
@@ -83,6 +86,11 @@ void Renderer::Init()
 	Texture2D* background_texture = Resources::Load<Texture2D>("background.png");
 	background_texture->SetFilter(GL_NEAREST);
 
+	Resources::Load<Texture2D>("construction.png")->SetFilter(GL_NEAREST);
+
+	backgroundShader->Use();
+	glUniform1i(backgroundShader->UniformGetLocation("screenTexture"), 0);
+	glUniform1i(backgroundShader->UniformGetLocation("constructionTexture"), 1);
 
 	// Creating Quad Buffer
 	glGenVertexArrays(1, &quadVAO);
@@ -179,8 +187,6 @@ void Renderer::Render()
 
 	currentzoom = MathHelper::lerp(currentzoom, zoom, Time::DeltaTime() * 8.0f);
 
-	
-
 	glm::vec2 min = ScreenMin();
 	glm::vec2 max = ScreenMax();
 
@@ -188,15 +194,21 @@ void Renderer::Render()
 	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 	glClearColor(0.0f, 0.019f, 0.050f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	float float_time = (float)Time::FixedTime();
 	
 	// Displaying frame buffer texture onto screen.
 	backgroundShader->Use();
 	backgroundShader->UniformSetVec2(10, newSize);
 	backgroundShader->UniformSetVec2(11, viewLerped);
 	backgroundShader->UniformSetFloat(12, currentzoom);
+	backgroundShader->UniformSetFloat(13, float_time);
 	glBindVertexArray(screenQuadVAO);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, Resources::Load<Texture2D>("background.png")->GetBuffer());
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, Resources::Load<Texture2D>("construction.png")->GetBuffer());
+	
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 
 
@@ -206,6 +218,7 @@ void Renderer::Render()
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
 	DrawUI();
+	CCTVManager::OnMoveableRender();
 	
 	glm::mat4 screenProjection = glm::ortho(0.0f, (float)lastWindowSize.x, 0.0f, (float)lastWindowSize.y);
 	glBindBuffer(GL_UNIFORM_BUFFER, UI_UBO);
@@ -213,6 +226,8 @@ void Renderer::Render()
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
 	Message::Render();
+
+	CCTVManager::OnStaticRender();
 
 
 	if (!hasUsedInput)
@@ -240,7 +255,7 @@ void Renderer::DrawUI()
 
 	//DrawTextA(glm::vec2(0, 0), glm::vec4(1,1,1,1), 0.25f, font, "Hello");
 
-	DrawTextInput(glm::vec2(0, 0), 0.25f, &hi, font);
+	DrawTextInput(glm::vec2(0, 0), 0.25f, &hi, font, 12);
 }
 
 void Renderer::EndRender()
@@ -519,20 +534,108 @@ float Font::GetTextWidth(float scale, std::string text)
 }
 
 static bool keyDown = false;
-void Renderer::DrawTextInput(glm::vec2 position, float scale, std::string* output, Font font)
+static GLuint currentKey;
+
+const GLuint KEY_ARRAY[] = 
+{
+	GLFW_KEY_BACKSPACE,
+	GLFW_KEY_0,
+	GLFW_KEY_1,
+	GLFW_KEY_2,
+    GLFW_KEY_3,
+	GLFW_KEY_4,
+	GLFW_KEY_5,
+	GLFW_KEY_6,
+	GLFW_KEY_7,
+	GLFW_KEY_8,
+	GLFW_KEY_9,
+	GLFW_KEY_A,
+	GLFW_KEY_B,
+	GLFW_KEY_C,
+	GLFW_KEY_D,
+	GLFW_KEY_E,
+	GLFW_KEY_F,
+	GLFW_KEY_G,
+	GLFW_KEY_H,
+	GLFW_KEY_I,
+	GLFW_KEY_J,
+	GLFW_KEY_K,
+	GLFW_KEY_L,
+	GLFW_KEY_M,
+	GLFW_KEY_N,
+	GLFW_KEY_O,
+	GLFW_KEY_P,
+	GLFW_KEY_Q,
+	GLFW_KEY_R,
+	GLFW_KEY_S,
+	GLFW_KEY_T,
+	GLFW_KEY_U,
+	GLFW_KEY_V,
+	GLFW_KEY_W,
+	GLFW_KEY_X,
+	GLFW_KEY_Y,
+	GLFW_KEY_Z,
+	GLFW_KEY_SPACE
+};
+
+const char* KEY_ARRAY_TO_CHAR[] =
+{
+	"",
+	"0",
+	"1",
+	"2",
+	"3",
+	"4",
+	"5",
+	"6",
+	"7",
+	"8",
+	"9",
+	"A",
+	"B",
+	"C",
+	"D",
+	"E",
+	"F",
+	"G",
+	"H",
+	"I",
+	"J",
+	"K",
+	"L",
+	"M",
+	"N",
+	"O",
+	"P",
+	"Q",
+	"R",
+	"S",
+	"T",
+	"U",
+	"V",
+	"W",
+	"X",
+	"Y",
+	"Z",
+	" "
+};
+
+
+void Renderer::DrawTextInput(glm::vec2 position, float scale, std::string* output, Font font, int limit)
 {
 	int state = Input::GetMouse(GLFW_MOUSE_BUTTON_LEFT);
 	float width = font.GetTextWidth(scale, *output);
 	if (width < 32)
 		width = 32;
 
-	bool isInBounds = IsMouseWithinBounds(position, position + glm::vec2(32, 32));
-	std::cout << isInBounds << std::endl;
+	bool isInBounds = IsMouseWithinBounds(position, position + glm::vec2(width, font.height * scale));
 	
+	DrawTextA(position, glm::vec4(1, 1, 1, 1), scale, font, *output);
 
 	if (inputUsing == output)
 	{
-		DrawTextA(position, glm::vec4(1, 1, 1, 1), scale, font, *output);
+		float pulse = (glm::sin(Time::FixedTime() * 4) / 4) + 0.75f;
+		DrawRect(position + position + glm::vec2(width, 0), glm::vec2(4, font.height * scale), glm::vec4(1, 1, 1, pulse));
 		hasUsedInput = true;
 
 		if (state == GLFW_PRESS && !isInBounds)
@@ -542,23 +645,39 @@ void Renderer::DrawTextInput(glm::vec2 position, float scale, std::string* outpu
 			return;
 		}
 
-		int keyState = Input::GetKey(GLFW_KEY_A);
-		if (keyState == GLFW_PRESS && !keyDown)
-		{
-			output->append("a");
-			keyDown = true;
-		}
+		int array_size = output->size();
 
-		if (keyState == GLFW_RELEASE && keyDown)
-			keyDown = false;
+		for (int i = 0; i < 38; i++)
+		{
+			GLuint key = KEY_ARRAY[i];
+			int keyState = Input::GetKey(key);
+			if (keyState == GLFW_PRESS && !keyDown)
+			{
+				if (i == 0 && array_size > 0)
+					output->erase(array_size - 1);
+				else
+					if (array_size < limit)
+						output->append(KEY_ARRAY_TO_CHAR[i]);
+
+				keyDown = true;
+				currentKey = key;
+			}
+
+			if (currentKey == key && keyState == GLFW_RELEASE && keyDown)
+				keyDown = false;
+		}
 	}
 	else
 	{
-		DrawTextA(position, glm::vec4(1, 1, 1, 0.8f), scale, font, *output);
 		if (state == GLFW_PRESS && isInBounds)
 		{
 			hasUsedInput = true;
 			inputUsing = output;
 		}
 	}
+}
+
+void Renderer::TextInputKeyProcess()
+{
+
 }

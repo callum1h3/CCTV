@@ -30,7 +30,6 @@ void Texture2D::Create(int _width, int _height, GLint data_type)
 	glGenTextures(1, &buffer);
 	glBindTexture(GL_TEXTURE_2D, buffer);
 	glTexImage2D(GL_TEXTURE_2D, 0, dataType, width, height, 0, data_type, GL_UNSIGNED_BYTE, nullptr);
-	glGenerateMipmap(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	isValid = true;
@@ -40,15 +39,14 @@ void Texture2D::Set(unsigned char* data)
 {
 	glBindTexture(GL_TEXTURE_2D, buffer);
 	glTexImage2D(GL_TEXTURE_2D, 0, dataType, width, height, 0, dataType, GL_UNSIGNED_BYTE, data);
-	glGenerateMipmap(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void Texture2D::SetFilter(GLint param)
 {
 	glBindTexture(GL_TEXTURE_2D, buffer);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, param);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, param);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, param);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, param);
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
