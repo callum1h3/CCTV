@@ -40,7 +40,9 @@ namespace Engine
 		static glm::vec2 ScreenSize();
 
 		static glm::vec2 viewPosition, viewLerped;
+		static bool isScreenSpace;
 		static float zoom, currentzoom;
+		static float constructionBar, constructionBarLerp;
 
 		static unsigned int background_size;
 

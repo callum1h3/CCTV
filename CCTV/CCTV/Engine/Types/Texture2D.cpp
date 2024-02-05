@@ -11,11 +11,9 @@ void Texture2D::Load(std::string fullpath)
 	int _width, _height, nrChannels;
 	unsigned char* data = stbi_load(fullpath.c_str(), &_width, &_height, &nrChannels, 0);
 
-	GLint data_type = GL_RGB ;
+	GLint data_type = GL_RGB;
 	if (nrChannels == 4)
 		data_type = GL_RGBA;
-
-	std::cout << nrChannels;
 	 
 	Create(_width, _height, data_type);
 	Set(data);

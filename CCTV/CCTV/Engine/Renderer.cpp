@@ -39,6 +39,7 @@ glm::ivec2 Renderer::lastWindowSize;
 FT_Library Renderer::ft;
 glm::vec2 Renderer::viewPosition, Renderer::viewLerped;
 float Renderer::zoom = 1, Renderer::currentzoom = 1;
+float Renderer::constructionBar, Renderer::constructionBarLerp;
 
 unsigned int Renderer::UI_UBO;
 
@@ -46,6 +47,7 @@ std::unordered_map<std::string, Font> Renderer::fonts;
 
 static std::string* inputUsing = nullptr;
 static bool hasUsedInput = false;
+bool Renderer::isScreenSpace;
 
 const float screenQuadVertices[] = {
 	// positions   // texCoords
@@ -86,7 +88,7 @@ void Renderer::Init()
 	Texture2D* background_texture = Resources::Load<Texture2D>("background.png");
 	background_texture->SetFilter(GL_NEAREST);
 
-	Resources::Load<Texture2D>("construction.png")->SetFilter(GL_NEAREST);
+	Resources::Load<Texture2D>("construction.jpg")->SetFilter(GL_NEAREST);
 
 	backgroundShader->Use();
 	glUniform1i(backgroundShader->UniformGetLocation("screenTexture"), 0);
@@ -164,8 +166,7 @@ void Renderer::Render()
 		OnWindowResize();
 	}
 
-	int right_mouse = Input::GetMouse(GLFW_MOUSE_BUTTON_RIGHT);
-	if (right_mouse == GLFW_PRESS)
+	if (Input::GetMouse(GLFW_MOUSE_BUTTON_RIGHT))
 	{
 		Input::SetInputMode(GLFW_CURSOR_DISABLED);
 
@@ -187,6 +188,8 @@ void Renderer::Render()
 
 	currentzoom = MathHelper::lerp(currentzoom, zoom, Time::DeltaTime() * 8.0f);
 
+	constructionBarLerp = MathHelper::lerp(constructionBarLerp, constructionBar, Time::DeltaTime() * 4.0f);
+
 	glm::vec2 min = ScreenMin();
 	glm::vec2 max = ScreenMax();
 
@@ -203,16 +206,18 @@ void Renderer::Render()
 	backgroundShader->UniformSetVec2(11, viewLerped);
 	backgroundShader->UniformSetFloat(12, currentzoom);
 	backgroundShader->UniformSetFloat(13, float_time);
+	backgroundShader->UniformSetFloat(14, constructionBarLerp);
 	glBindVertexArray(screenQuadVAO);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, Resources::Load<Texture2D>("background.png")->GetBuffer());
 	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, Resources::Load<Texture2D>("construction.png")->GetBuffer());
+	glBindTexture(GL_TEXTURE_2D, Resources::Load<Texture2D>("construction.jpg")->GetBuffer());
 	
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 
 
 	glm::mat4 moveableProjection = glm::ortho(min.x, max.x, min.y, max.y);
+	isScreenSpace = false;
 	glBindBuffer(GL_UNIFORM_BUFFER, UI_UBO);
 	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), &moveableProjection);
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
@@ -221,6 +226,7 @@ void Renderer::Render()
 	CCTVManager::OnMoveableRender();
 	
 	glm::mat4 screenProjection = glm::ortho(0.0f, (float)lastWindowSize.x, 0.0f, (float)lastWindowSize.y);
+	isScreenSpace = true;
 	glBindBuffer(GL_UNIFORM_BUFFER, UI_UBO);
 	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), &screenProjection);
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
@@ -332,8 +338,6 @@ glm::vec2 Renderer::PixelToScreen(glm::vec2 input)
 
 void Renderer::ScrollWheelCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
-	std::cout << xoffset << " " << yoffset << "\n";
-
 	zoom = glm::clamp(zoom + ((float)yoffset * 0.05f), 0.1f, 4.0f);
 }
 
@@ -475,13 +479,20 @@ bool Renderer::IsMouseWithinBounds(glm::vec2 start, glm::vec2 end)
 	double x, y;
 	Input::GetCursor(&x, &y);
 
-	x *= zoom;
-	y *= zoom;
-
-	glm::vec2 min = ScreenMin();
-	glm::vec2 max = ScreenMax();
-	x += min.x;
-	y = max.y - y;
+	if (!isScreenSpace)
+	{
+		x *= zoom;
+		y *= zoom;
+	
+		glm::vec2 min = ScreenMin();
+		glm::vec2 max = ScreenMax();
+		x += min.x;
+		y = max.y - y;
+	}
+	else
+	{
+		y = lastWindowSize.y - y;
+	}
 
 	if (x > start.x && y > start.y)
 		if (x < end.x && y < end.y)
@@ -650,21 +661,14 @@ void Renderer::DrawTextInput(glm::vec2 position, float scale, std::string* outpu
 		for (int i = 0; i < 38; i++)
 		{
 			GLuint key = KEY_ARRAY[i];
-			int keyState = Input::GetKey(key);
-			if (keyState == GLFW_PRESS && !keyDown)
+			if (Input::IsKeyDown(key))
 			{
 				if (i == 0 && array_size > 0)
 					output->erase(array_size - 1);
 				else
 					if (array_size < limit)
 						output->append(KEY_ARRAY_TO_CHAR[i]);
-
-				keyDown = true;
-				currentKey = key;
 			}
-
-			if (currentKey == key && keyState == GLFW_RELEASE && keyDown)
-				keyDown = false;
 		}
 	}
 	else

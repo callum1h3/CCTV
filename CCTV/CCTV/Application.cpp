@@ -44,6 +44,8 @@ void Application::Run()
 
 		Engine::Renderer::EndRender();
 
+		Engine::Input::LateUpdate();
+
 		glfwSwapBuffers(window.Get());
 	}
 

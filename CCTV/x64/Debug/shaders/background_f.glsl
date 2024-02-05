@@ -9,6 +9,7 @@ layout(location = 10) uniform vec2 screenSize;
 layout(location = 11) uniform vec2 screenPosition;
 layout(location = 12) uniform float screenScale;
 layout(location = 13) uniform float time;
+layout(location = 14) uniform float constructionBar;
 
 uniform sampler2D screenTexture;
 uniform sampler2D constructionTexture;
@@ -19,8 +20,8 @@ void main()
     float xCoords = screenSize.x / sizeOfCell;
     float yCoords = screenSize.y / sizeOfCell;
 
-    float sizeOfBordersX = sizeOfCell / screenSize.x;
-    float sizeOfBordersY = sizeOfCell / screenSize.y;
+    float sizeOfBordersX = (sizeOfCell * constructionBar) / screenSize.x;
+    float sizeOfBordersY = (sizeOfCell * constructionBar) / screenSize.y;
 
     float screenX = screenPosition.x / screenSize.x;
     float screenY = screenPosition.y / screenSize.y;

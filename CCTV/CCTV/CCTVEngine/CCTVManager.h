@@ -13,6 +13,8 @@ private:
 	// Mode Switching Icons
 	static Engine::Texture2D* editModeIcon;
 	static Engine::Texture2D* cameraModeIcon;
+	
+	static bool isEditting;
 
 	static void EditButtonToggle();
 };
