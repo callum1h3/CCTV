@@ -15,6 +15,7 @@ private:
 	static Engine::Texture2D* cameraModeIcon;
 	
 	static bool isEditting;
+	static float editButtonTime;
 
 	static void EditButtonToggle();
 };

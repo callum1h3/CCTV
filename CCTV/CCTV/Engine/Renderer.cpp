@@ -88,7 +88,7 @@ void Renderer::Init()
 	Texture2D* background_texture = Resources::Load<Texture2D>("background.png");
 	background_texture->SetFilter(GL_NEAREST);
 
-	Resources::Load<Texture2D>("construction.jpg")->SetFilter(GL_NEAREST);
+	Resources::Load<Texture2D>("construction.png")->SetFilter(GL_NEAREST);
 
 	backgroundShader->Use();
 	glUniform1i(backgroundShader->UniformGetLocation("screenTexture"), 0);
@@ -211,7 +211,7 @@ void Renderer::Render()
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, Resources::Load<Texture2D>("background.png")->GetBuffer());
 	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, Resources::Load<Texture2D>("construction.jpg")->GetBuffer());
+	glBindTexture(GL_TEXTURE_2D, Resources::Load<Texture2D>("construction.png")->GetBuffer());
 	
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 
@@ -238,6 +238,16 @@ void Renderer::Render()
 
 	if (!hasUsedInput)
 		inputUsing = nullptr;
+}
+
+bool Renderer::DrawButton(glm::vec2 position, glm::vec2 size, glm::vec4 color, Texture2D* texture)
+{
+	glm::vec2 max = position + size;
+	DrawRect(position, size, color, texture);
+
+	if (Renderer::IsMouseWithinBounds(position, max) && Input::IsMouseDown(GLFW_MOUSE_BUTTON_LEFT))
+		return true;
+	return false;
 }
 
 static std::string hi = "hi";

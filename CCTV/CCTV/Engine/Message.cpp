@@ -49,7 +49,7 @@ void Message::Render()
 
 		glm::vec2 position = glm::vec2(8, Renderer::ScreenSize().y - y_offset) - glm::vec2(0, text_height + 12);
 
-		Renderer::DrawRect(position + glm::vec2(-4,-4), glm::vec2(font_width + 8, text_height + 8), glm::vec4(0.0705f, 0.2392f, 0.5019f, message->transparency));
+		Renderer::DrawRect(position + glm::vec2(-4,-4), glm::vec2(font_width + 8, text_height + 8), glm::vec4(0.01f, 0.01f, 0.01f, message->transparency));
 		Renderer::DrawTextA(position, glm::vec4(1.0f, 1.0f, 1.0f, message->transparency), font_size, font, message->GetMessageContent());
 		
 
