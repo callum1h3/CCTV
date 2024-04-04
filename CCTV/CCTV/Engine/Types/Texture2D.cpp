@@ -9,7 +9,13 @@ using namespace Engine;
 void Texture2D::Load(std::string fullpath)
 {
 	int _width, _height, nrChannels;
+	
 	unsigned char* data = stbi_load(fullpath.c_str(), &_width, &_height, &nrChannels, 0);
+
+	if (data == nullptr)
+	{
+		std::cout << "Failed to load image \n";
+	}
 
 	GLint data_type = GL_RGB;
 	if (nrChannels == 4)
@@ -17,6 +23,8 @@ void Texture2D::Load(std::string fullpath)
 	 
 	Create(_width, _height, data_type);
 	Set(data);
+
+	stbi_image_free(data);
 }
 
 void Texture2D::Create(int _width, int _height, GLint data_type)
@@ -27,7 +35,7 @@ void Texture2D::Create(int _width, int _height, GLint data_type)
 
 	glGenTextures(1, &buffer);
 	glBindTexture(GL_TEXTURE_2D, buffer);
-	glTexImage2D(GL_TEXTURE_2D, 0, dataType, width, height, 0, data_type, GL_UNSIGNED_BYTE, nullptr);
+	glTexImage2D(GL_TEXTURE_2D, 0, data_type, width, height, 0, data_type, GL_UNSIGNED_BYTE, nullptr);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	isValid = true;
@@ -35,6 +43,7 @@ void Texture2D::Create(int _width, int _height, GLint data_type)
 
 void Texture2D::Set(unsigned char* data)
 {
+	std::cout << dataType << "\n";
 	glBindTexture(GL_TEXTURE_2D, buffer);
 	glTexImage2D(GL_TEXTURE_2D, 0, dataType, width, height, 0, dataType, GL_UNSIGNED_BYTE, data);
 	glBindTexture(GL_TEXTURE_2D, 0);

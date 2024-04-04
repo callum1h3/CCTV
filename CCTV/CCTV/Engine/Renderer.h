@@ -54,7 +54,14 @@ namespace Engine
 		static void DrawTextInput(glm::vec2 position, float scale, std::string* output, Font font, int limit);
 		static bool DrawButton(glm::vec2 position, glm::vec2 size, glm::vec4 color, Texture2D* texture = nullptr);
 		static bool IsMouseWithinBounds(glm::vec2 start, glm::vec2 end);
+		static void GetMouseRelative(double& x, double& y);
 		static glm::vec2 PixelToScreen(glm::vec2 input);
+
+		static void DisableMouse();
+		static void EnableMouse();
+		static bool isMouseEnabled;
+		static bool isMouseThisFrame;
+
 	private:
 		static unsigned int FBO;
 		static unsigned int RBO;

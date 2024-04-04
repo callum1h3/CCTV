@@ -25,6 +25,9 @@
     <Filter Include="Source Files\CCTVEngine">
       <UniqueIdentifier>{fdb6a1ac-1275-44ec-b5e9-519419745bd2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\CCTVEngine\SObjects">
+      <UniqueIdentifier>{e8ddafcf-ede0-4fb4-9b42-bc6a46e6651f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CCTV.cpp">
@@ -69,6 +72,9 @@
     <ClCompile Include="CCTVEngine\CCTVManager.cpp">
       <Filter>Source Files\CCTVEngine</Filter>
     </ClCompile>
+    <ClCompile Include="CCTVEngine\SObjects\Camera.cpp">
+      <Filter>Source Files\CCTVEngine\SObjects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h">
@@ -112,6 +118,12 @@
     </ClInclude>
     <ClInclude Include="CCTVEngine\CCTVManager.h">
       <Filter>Source Files\CCTVEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="CCTVEngine\SObjects\Camera.h">
+      <Filter>Source Files\CCTVEngine\SObjects</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Macro.h">
+      <Filter>Source Files\Engine</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

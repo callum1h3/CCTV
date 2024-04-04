@@ -1,4 +1,5 @@
 #include "Input.h"
+#include "Renderer.h"
 #include "../Application.h"
 #include <iostream>
 
@@ -8,6 +9,7 @@ Window* Input::window;
 bool Input::isFirstFPSStyle = true;
 std::unordered_map<int, Key*> Input::keys;
 std::vector<Key*> Input::keys_vector;
+
 
 void Input::Initialize()
 {
@@ -47,6 +49,9 @@ void Input::MouseButtonCallback(GLFWwindow* window, int button, int action, int 
 
 bool Input::GetKey(int key)
 {
+	if (!Renderer::isMouseEnabled)
+		return false;
+
 	if (!keys.count(key))
 		return false;
 
@@ -55,6 +60,9 @@ bool Input::GetKey(int key)
 
 bool Input::IsKeyDown(int key)
 {
+	if (!Renderer::isMouseEnabled)
+		return false;
+
 	if (!keys.count(key))
 		return false;
 
@@ -73,16 +81,23 @@ bool Input::IsKeyUp(int key)
 
 bool Input::GetMouse(int key)
 {
+	if (!Renderer::isMouseEnabled)
+		return false;
+
 	return GetKey(-(key + 1));
 }
 
 bool Input::IsMouseDown(int key)
 {
+	if (!Renderer::isMouseEnabled)
+		return false;
 	return IsKeyDown(-(key + 1));
 }
 
 bool Input::IsMouseUp(int key)
 {
+	if (!Renderer::isMouseEnabled)
+		return false;
 	return IsKeyUp(-(key + 1));
 }
 

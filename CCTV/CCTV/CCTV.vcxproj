@@ -139,6 +139,7 @@
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="CCTV.cpp" />
     <ClCompile Include="CCTVEngine\CCTVManager.cpp" />
+    <ClCompile Include="CCTVEngine\SObjects\Camera.cpp" />
     <ClCompile Include="Engine\Input.cpp" />
     <ClCompile Include="Engine\MathHelper.cpp" />
     <ClCompile Include="Engine\Message.cpp" />
@@ -153,7 +154,9 @@
   <ItemGroup>
     <ClInclude Include="Application.h" />
     <ClInclude Include="CCTVEngine\CCTVManager.h" />
+    <ClInclude Include="CCTVEngine\SObjects\Camera.h" />
     <ClInclude Include="Engine\Debug.h" />
+    <ClInclude Include="Engine\Macro.h" />
     <ClInclude Include="Engine\Input.h" />
     <ClInclude Include="Engine\MathHelper.h" />
     <ClInclude Include="Engine\Message.h" />

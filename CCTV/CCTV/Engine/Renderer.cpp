@@ -42,6 +42,8 @@ float Renderer::zoom = 1, Renderer::currentzoom = 1;
 float Renderer::constructionBar, Renderer::constructionBarLerp;
 
 unsigned int Renderer::UI_UBO;
+bool Renderer::isMouseEnabled = true;
+bool Renderer::isMouseThisFrame = false;
 
 std::unordered_map<std::string, Font> Renderer::fonts;
 
@@ -70,6 +72,18 @@ const float quadVertices[] = { // vertex attributes for a quad that fills the en
 	 1.0f, 0,  1.0f, 0.0f,
 	 1.0f,  1.0f,  1.0f, 1.0f
 };
+
+void Renderer::DisableMouse()
+{
+	isMouseThisFrame = true;
+	isMouseEnabled = false;
+}
+
+void Renderer::EnableMouse()
+{
+	isMouseThisFrame = true;
+	isMouseEnabled = true;
+}
 
 void Renderer::Init()
 {
@@ -158,6 +172,10 @@ void Renderer::Render()
 {
 	hasUsedInput = false;
 	Window* window = Application::GetWindow();
+
+	if (!isMouseThisFrame)
+		isMouseEnabled = true;
+	isMouseThisFrame = false;
 
 	glm::ivec2 newSize = window->GetSize();
 	if (newSize != lastWindowSize)
@@ -348,6 +366,9 @@ glm::vec2 Renderer::PixelToScreen(glm::vec2 input)
 
 void Renderer::ScrollWheelCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
+	if (!isMouseEnabled)
+		return;
+
 	zoom = glm::clamp(zoom + ((float)yoffset * 0.05f), 0.1f, 4.0f);
 }
 
@@ -486,6 +507,9 @@ glm::vec2 Renderer::ScreenSize()
 
 bool Renderer::IsMouseWithinBounds(glm::vec2 start, glm::vec2 end)
 {
+	if (!isMouseEnabled)
+		return false;
+
 	double x, y;
 	Input::GetCursor(&x, &y);
 
@@ -510,6 +534,30 @@ bool Renderer::IsMouseWithinBounds(glm::vec2 start, glm::vec2 end)
 
 	return false;
 
+}
+
+void Renderer::GetMouseRelative(double& x, double& y)
+{
+	double _x, _y;
+	Input::GetCursor(&_x, &_y);
+
+	if (!isScreenSpace)
+	{
+		_x *= zoom;
+		_y *= zoom;
+
+		glm::vec2 min = ScreenMin();
+		glm::vec2 max = ScreenMax();
+		_x += min.x;
+		_y = max.y - _y;
+	}
+	else
+	{
+		_y = lastWindowSize.y - _y;
+	}
+
+	x = _x;
+	y = _y;
 }
 
 void Renderer::DrawTextA(glm::vec2 position, glm::vec4 color, float scale, std::string font, std::string text)
