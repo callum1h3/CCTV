@@ -9,6 +9,7 @@
 class Tool
 {
 public:
+	virtual const char* GetIcon();
 	virtual bool OnPlace(glm::vec2 cursor_position);
 	virtual void OnDisplay(glm::vec2 cursor_position);
 };
@@ -18,6 +19,7 @@ class SObject
 public:
 	virtual void OnDisplay();
 	virtual void OnSave();
+	virtual void OnSettings(glm::ivec2 screenSize);
 	virtual int GetID();
 	virtual int GetOrder();
 };
@@ -42,9 +44,15 @@ public:
 	static void OnMoveableRender();
 	static void OnStaticRender();
 
+	static bool IsSettingsOpen();
+	static void SettingsToggle();
+
 	static void AddSObject(SObject* obj);
 	static void __AddToolType(Tool* tool);
 	static void __AddSObjectType(SObject* sobj);
+
+	static SObject* selected_object;
+
 private:
 	static std::vector<SObject*> sobjects;
 	static std::vector<SObject*> sObjectTypes;
@@ -62,7 +70,6 @@ private:
 	static bool isSettingsOpen;
 	static float editButtonTime;
 	
-	static void SettingsToggle();
 	static void EditButtonToggle();
 
 	static void RenderSettings();

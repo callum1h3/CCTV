@@ -25,11 +25,15 @@ std::vector<Tool*> CCTVManager::toolTypes;
 std::vector<RenderOrderContainer*> CCTVManager::render_order;
 std::unordered_map<int, RenderOrderContainer*> CCTVManager::render_order_map;
 Tool* CCTVManager::selected_tool = nullptr;
+SObject* CCTVManager::selected_object = nullptr;
+
 // Tools
 
 bool Tool::OnPlace(glm::vec2 cursor_position) { return true; }
 void Tool::OnDisplay(glm::vec2 cursor_position) {}
+const char* Tool::GetIcon() { return ""; }
 
+void SObject::OnSettings(glm::ivec2 screenSize) {}
 void SObject::OnDisplay() {}
 void SObject::OnSave() {}
 int SObject::GetID() { return -1; }
@@ -83,7 +87,7 @@ void CCTVManager::OnStaticRender()
 	Engine::Window* window = Application::GetWindow();
 	glm::ivec2 windowSize = window->GetSize();
 	
-	if (Engine::Renderer::DrawButton(glm::vec2(windowSize.x - 64, 0), glm::vec2(64, 64), glm::vec4(1, 1, 1, 1)))
+	if (Engine::Renderer::DrawButton(glm::vec2(windowSize.x - 64, 0), glm::vec2(64, 64), glm::vec4(1, 1, 1, 1), Engine::Resources::Load<Engine::Texture2D>("settings.png")))
 		EditButtonToggle();
 
 	float x_position = windowSize.x - (64 * Engine::Renderer::constructionBarLerp);
@@ -91,7 +95,7 @@ void CCTVManager::OnStaticRender()
 	int i = 1;
 	for (Tool* tool : toolTypes)
 	{
-		if (Engine::Renderer::DrawButton(glm::vec2(x_position, 68 * i), glm::vec2(64, 64), glm::vec4(1, 1, 1, 1)))
+		if (Engine::Renderer::DrawButton(glm::vec2(x_position, 68 * i), glm::vec2(64, 64), glm::vec4(1, 1, 1, 1), Engine::Resources::Load<Engine::Texture2D>(tool->GetIcon())))
 			SelectTool(tool);
 		i++;
 	}
@@ -114,7 +118,10 @@ void CCTVManager::OnStaticRender()
 			if (editButtonTime > Engine::Time::FixedTime())
 				return;
 
-			if (selected_tool->OnPlace(mouse_position))
+			double x1, y1;
+			Engine::Renderer::GetMouseMoveable(x1, y1);
+
+			if (selected_tool->OnPlace(glm::vec2(x1, y1)))
 				DeleteTool();
 		}
 	}
@@ -165,25 +172,36 @@ void CCTVManager::RenderSettings()
 
 	Engine::Renderer::EnableMouse();
 
-	if (Engine::Renderer::DrawButton(glm::vec2(0, 0), glm::vec2(64, 64), glm::vec4(1, 1, 1, transpancy)))
+	if (Engine::Renderer::DrawButton(glm::vec2(0, 0), glm::vec2(64, 64), glm::vec4(1, 1, 1, transpancy), Engine::Resources::Load<Engine::Texture2D>("back.png")))
+	{
 		SettingsToggle();
-
+		selected_object = nullptr;
+	}
 
 	float title_font_size = 0.1f;
 	float width = font.GetTextWidth(title_font_size, "SETTINGS");
 	Engine::Renderer::DrawTextA(glm::vec2((windowSize.x / 2) - (width / 2), windowSize.y - ((font.height * title_font_size) * 2)), glm::vec4(1, 1, 1, transpancy), title_font_size, font, "SETTINGS");
 
+	if (selected_object != nullptr)
+	{
+		selected_object->OnSettings(windowSize);
+	}
+	else
+	{
+
+	}
 
 	
 	Engine::Renderer::DisableMouse();
 }
 
+bool CCTVManager::IsSettingsOpen()
+{
+	return isSettingsOpen;
+}
+
 void CCTVManager::SettingsToggle()
 {
-	if (editButtonTime > Engine::Time::FixedTime())
-		return;
-	editButtonTime = Engine::Time::FixedTime() + 1.0f;
-	
 	if (isSettingsOpen)
 	{
 		isSettingsOpen = false;

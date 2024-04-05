@@ -8,6 +8,8 @@ using namespace Engine;
 
 void Texture2D::Load(std::string fullpath)
 {
+	stbi_set_flip_vertically_on_load(1);
+
 	int _width, _height, nrChannels;
 	
 	unsigned char* data = stbi_load(fullpath.c_str(), &_width, &_height, &nrChannels, 0);
@@ -17,12 +19,18 @@ void Texture2D::Load(std::string fullpath)
 		std::cout << "Failed to load image \n";
 	}
 
-	GLint data_type = GL_RGB;
-	if (nrChannels == 4)
-		data_type = GL_RGBA;
-	 
-	Create(_width, _height, data_type);
+	GLenum format{};
+
+	if (nrChannels == 1)
+		format = GL_RED;
+	else if (nrChannels == 3)
+		format = GL_RGB;
+	else if (nrChannels == 4)
+		format = GL_RGBA;
+
+	Create(_width, _height, format);
 	Set(data);
+	SetFilter(GL_LINEAR);
 
 	stbi_image_free(data);
 }
@@ -34,19 +42,25 @@ void Texture2D::Create(int _width, int _height, GLint data_type)
 	dataType = data_type;
 
 	glGenTextures(1, &buffer);
+	
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 	glBindTexture(GL_TEXTURE_2D, buffer);
 	glTexImage2D(GL_TEXTURE_2D, 0, data_type, width, height, 0, data_type, GL_UNSIGNED_BYTE, nullptr);
 	glBindTexture(GL_TEXTURE_2D, 0);
+
+	std::cout << buffer << "\n";
 
 	isValid = true;
 }
 
 void Texture2D::Set(unsigned char* data)
 {
-	std::cout << dataType << "\n";
 	glBindTexture(GL_TEXTURE_2D, buffer);
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 	glTexImage2D(GL_TEXTURE_2D, 0, dataType, width, height, 0, dataType, GL_UNSIGNED_BYTE, data);
 	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glGenerateMipmap(buffer);
 }
 
 void Texture2D::SetFilter(GLint param)

@@ -51,9 +51,11 @@ namespace Engine
 		static void DrawTextA(glm::vec2 position, glm::vec4 color, float scale, Font font, std::string text);
 		static void DrawTextA(glm::vec2 position, glm::vec4 color, float scale, std::string font, std::string text);
 		static void DrawRect(glm::vec2 position, glm::vec2 size, glm::vec4 color, Texture2D* texture = nullptr);
-		static void DrawTextInput(glm::vec2 position, float scale, std::string* output, Font font, int limit);
+		static float DrawTextInput(glm::vec2 position, float scale, std::string* output, Font font, int limit, std::string default_str = "");
 		static bool DrawButton(glm::vec2 position, glm::vec2 size, glm::vec4 color, Texture2D* texture = nullptr);
 		static bool IsMouseWithinBounds(glm::vec2 start, glm::vec2 end);
+
+		static void GetMouseMoveable(double& x, double& y);
 		static void GetMouseRelative(double& x, double& y);
 		static glm::vec2 PixelToScreen(glm::vec2 input);
 

@@ -17,6 +17,8 @@
 
 #include "../CCTVEngine/CCTVManager.h"
 
+#include "stb_image.h"
+
 using namespace Engine;
 
 // Buffers
@@ -87,6 +89,8 @@ void Renderer::EnableMouse()
 
 void Renderer::Init()
 {
+	stbi_set_flip_vertically_on_load(true);
+
 	viewPosition = glm::vec2(0, 0);
 	lastWindowSize = glm::ivec2(0,0);
 
@@ -233,9 +237,13 @@ void Renderer::Render()
 	
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 
-
+	// Creating projection matrix that moves.
 	glm::mat4 moveableProjection = glm::ortho(min.x, max.x, min.y, max.y);
+
+	// Setting the screenspace to false.
 	isScreenSpace = false;
+
+	// Uploading the project matrix to uniform buffer block.
 	glBindBuffer(GL_UNIFORM_BUFFER, UI_UBO);
 	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), &moveableProjection);
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
@@ -243,8 +251,13 @@ void Renderer::Render()
 	DrawUI();
 	CCTVManager::OnMoveableRender();
 	
+	// Creating the projection matrix of normal screen scale.
 	glm::mat4 screenProjection = glm::ortho(0.0f, (float)lastWindowSize.x, 0.0f, (float)lastWindowSize.y);
+
+	// Setting the screenspace to true.
 	isScreenSpace = true;
+
+	// Uploading the project matrix to uniform buffer block.
 	glBindBuffer(GL_UNIFORM_BUFFER, UI_UBO);
 	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), &screenProjection);
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
@@ -261,10 +274,17 @@ void Renderer::Render()
 bool Renderer::DrawButton(glm::vec2 position, glm::vec2 size, glm::vec4 color, Texture2D* texture)
 {
 	glm::vec2 max = position + size;
+	if (Renderer::IsMouseWithinBounds(position, max))
+	{
+		color.r *= .75f;
+		color.g *= .75f;
+		color.b *= .75f;
+		if (Input::IsMouseDown(GLFW_MOUSE_BUTTON_LEFT))
+			return true;
+	}
+	
 	DrawRect(position, size, color, texture);
 
-	if (Renderer::IsMouseWithinBounds(position, max) && Input::IsMouseDown(GLFW_MOUSE_BUTTON_LEFT))
-		return true;
 	return false;
 }
 
@@ -492,12 +512,14 @@ void Renderer::DrawTextA(glm::vec2 position, glm::vec4 color, float scale, Font 
 
 glm::vec2 Renderer::ScreenMin()
 {
-	return viewLerped;
+	glm::vec2 view_max = ((glm::vec2)lastWindowSize * currentzoom);
+	return viewLerped - (view_max * 0.5f);
 }
 
 glm::vec2 Renderer::ScreenMax()
 {
-	return viewLerped + ((glm::vec2)lastWindowSize * currentzoom);
+	glm::vec2 view_max = ((glm::vec2)lastWindowSize * currentzoom);
+	return viewLerped + (view_max * 0.5f);
 }
 
 glm::vec2 Renderer::ScreenSize()
@@ -536,6 +558,23 @@ bool Renderer::IsMouseWithinBounds(glm::vec2 start, glm::vec2 end)
 
 }
 
+void Renderer::GetMouseMoveable(double& x, double& y)
+{
+	double _x, _y;
+	Input::GetCursor(&_x, &_y);
+
+	_x *= zoom;
+	_y *= zoom;
+
+	glm::vec2 min = ScreenMin();
+	glm::vec2 max = ScreenMax();
+	_x += min.x;
+	_y = max.y - _y;
+
+	x = _x;
+	y = _y;
+}
+
 void Renderer::GetMouseRelative(double& x, double& y)
 {
 	double _x, _y;
@@ -559,6 +598,8 @@ void Renderer::GetMouseRelative(double& x, double& y)
 	x = _x;
 	y = _y;
 }
+
+
 
 void Renderer::DrawTextA(glm::vec2 position, glm::vec4 color, float scale, std::string font, std::string text)
 {
@@ -644,6 +685,8 @@ const GLuint KEY_ARRAY[] =
 	GLFW_KEY_X,
 	GLFW_KEY_Y,
 	GLFW_KEY_Z,
+	GLFW_KEY_SEMICOLON,
+	GLFW_KEY_PERIOD,
 	GLFW_KEY_SPACE
 };
 
@@ -686,37 +729,43 @@ const char* KEY_ARRAY_TO_CHAR[] =
 	"X",
 	"Y",
 	"Z",
+	":",
+	".",
 	" "
 };
 
 
-void Renderer::DrawTextInput(glm::vec2 position, float scale, std::string* output, Font font, int limit)
+float Renderer::DrawTextInput(glm::vec2 position, float scale, std::string* output, Font font, int limit, std::string default_str)
 {
-	int state = Input::GetMouse(GLFW_MOUSE_BUTTON_LEFT);
 	float width = font.GetTextWidth(scale, *output);
-	if (width < 32)
-		width = 32;
+	if (output->size() < 1)
+		width = font.GetTextWidth(scale, default_str);
+
+	position.x -= width / 2;
 
 	bool isInBounds = IsMouseWithinBounds(position, position + glm::vec2(width, font.height * scale));
 	
-	DrawTextA(position, glm::vec4(1, 1, 1, 1), scale, font, *output);
+	if (output->size() < 1)
+		DrawTextA(position, glm::vec4(.75, .75, .75, 1), scale, font, default_str);
+	else
+		DrawTextA(position, glm::vec4(1, 1, 1, 1), scale, font, *output);
 
 	if (inputUsing == output)
 	{
 		float pulse = (glm::sin(Time::FixedTime() * 4) / 4) + 0.75f;
-		DrawRect(position + position + glm::vec2(width, 0), glm::vec2(4, font.height * scale), glm::vec4(1, 1, 1, pulse));
+		DrawRect(position + glm::vec2(width, 0), glm::vec2(4, font.height * scale), glm::vec4(1, 1, 1, pulse));
 		hasUsedInput = true;
 
-		if (state == GLFW_PRESS && !isInBounds)
+		if (Engine::Input::IsMouseDown(GLFW_MOUSE_BUTTON_LEFT) && !isInBounds)
 		{
 			hasUsedInput = false;
 			inputUsing = nullptr;
-			return;
+			return width;
 		}
 
 		int array_size = output->size();
 
-		for (int i = 0; i < 38; i++)
+		for (int i = 0; i < 40; i++)
 		{
 			GLuint key = KEY_ARRAY[i];
 			if (Input::IsKeyDown(key))
@@ -731,12 +780,14 @@ void Renderer::DrawTextInput(glm::vec2 position, float scale, std::string* outpu
 	}
 	else
 	{
-		if (state == GLFW_PRESS && isInBounds)
+		if (Engine::Input::IsMouseDown(GLFW_MOUSE_BUTTON_LEFT) && isInBounds)
 		{
 			hasUsedInput = true;
 			inputUsing = output;
 		}
 	}
+
+	return width;
 }
 
 void Renderer::TextInputKeyProcess()
