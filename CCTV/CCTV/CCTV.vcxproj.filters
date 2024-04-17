@@ -28,6 +28,9 @@
     <Filter Include="Source Files\CCTVEngine\SObjects">
       <UniqueIdentifier>{e8ddafcf-ede0-4fb4-9b42-bc6a46e6651f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Libs\jpeg-com">
+      <UniqueIdentifier>{c14660bc-194f-40da-ba8b-153d2e0dc3d4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CCTV.cpp">
@@ -74,6 +77,12 @@
     </ClCompile>
     <ClCompile Include="CCTVEngine\SObjects\Camera.cpp">
       <Filter>Source Files\CCTVEngine\SObjects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Dependances\include\jpeg-compressor\jpgd.cpp">
+      <Filter>Source Files\Libs\jpeg-com</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Dependances\include\jpeg-compressor\jpge.cpp">
+      <Filter>Source Files\Libs\jpeg-com</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

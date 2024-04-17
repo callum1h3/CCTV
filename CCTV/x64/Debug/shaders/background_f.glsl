@@ -23,15 +23,10 @@ void main()
     float sizeOfBordersX = (sizeOfCell * constructionBar) / screenSize.x;
     float sizeOfBordersY = (sizeOfCell * constructionBar) / screenSize.y;
 
-    float screenX = screenPosition.x / screenSize.x;
-    float screenY = screenPosition.y / screenSize.y;
-
-    vec2 screenPosToUV = vec2(screenX, screenY);
-    vec2 texCoords = (TexCoords * vec2(xCoords, yCoords)) + screenPosToUV;
-    vec2 finalCoords = (texCoords * screenScale);
+    vec2 texCoords = (TexCoords * vec2(xCoords, yCoords));
     
     if (TexCoords.x < sizeOfBordersX || TexCoords.x > (1 - sizeOfBordersX) || TexCoords.y < sizeOfBordersY || TexCoords.y > (1 - sizeOfBordersY))
     	FragColor = texture(constructionTexture, texCoords + vec2(0, time));
     else
-        FragColor = texture(screenTexture, finalCoords);
+        FragColor = texture(screenTexture, texCoords);
 }

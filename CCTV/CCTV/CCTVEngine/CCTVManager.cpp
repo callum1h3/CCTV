@@ -10,9 +10,17 @@
 #include "../Engine/MathHelper.h"
 #include "../Engine/OSHandler.h"
 
+#include "SObjects/Camera.h"
+#include <Windows.h>
+#include <chrono>
+
+
 // Mode Switching Icons
 Engine::Texture2D* CCTVManager::editModeIcon;
 Engine::Texture2D* CCTVManager::cameraModeIcon;
+
+std::thread CCTVManager::validateThread;
+bool CCTVManager::IsMainThreadAlive = false;
 
 bool CCTVManager::isEditting = false;
 bool CCTVManager::isSettingsOpen = false;
@@ -71,15 +79,84 @@ int RenderOrderContainer::Contains(SObject* obj)
 
 void CCTVManager::OnInitialize()
 {
-
+	IsMainThreadAlive = true;
+	validateThread = std::thread(ValidateThread);
 	//editModeIcon = Engine::Resources::Load<Engine::Texture2D>("icons/edit.png");
 	//cameraModeIcon = Engine::Resources::Load<Engine::Texture2D>("icons/edit.png");
+}
+
+void CCTVManager::OnDispose()
+{
+	IsMainThreadAlive = false;
+	validateThread.join();
+}
+
+
+
+void CCTVManager::ValidateThread()
+{
+	// Camera Layer
+	RenderOrderContainer* container = FindContainer(1);
+
+	int i = 0;
+	while (IsMainThreadAlive)
+	{
+		Sleep(1);
+
+		if (container->objs.size() == 0)
+			continue;
+
+		if (container->objs.size() <= i)
+		{
+			i = 0;
+			continue;
+		}
+
+		SCamera* camera = (SCamera*)container->objs[i];
+		camera->Validate();
+
+		i++;	
+	}
+}
+
+void CCTVManager::UpdateCamera()
+{
+	RenderOrderContainer* container = FindContainer(1);
+
+	for (SObject* obj : container->objs)
+	{
+		SCamera* camera = (SCamera*)obj;
+		if (camera->queuedData != nullptr)
+		{
+			ImageData* container = camera->queuedData;
+
+			Engine::Texture2D* texture = new Engine::Texture2D();
+			texture->Create(container->width, container->height, GL_RGB);
+			texture->Set((unsigned char*)container->data);
+			texture->SetFilter(GL_LINEAR);
+
+			if (camera->camera_texture != nullptr)
+			{
+				camera->camera_texture->Dispose();
+				delete camera->camera_texture;
+				camera->camera_texture = nullptr;
+			}
+
+			camera->camera_texture = texture;
+
+			delete container->data;
+			delete camera->queuedData;
+			camera->queuedData = nullptr;
+		}
+	}
 }
 
 void CCTVManager::OnMoveableRender()
 {
 	for (RenderOrderContainer* container : render_order)
 		container->Render();
+
+	UpdateCamera();
 }
 
 void CCTVManager::OnStaticRender()
@@ -129,6 +206,7 @@ void CCTVManager::OnStaticRender()
 
 void CCTVManager::AddSObject(SObject* obj)
 {
+	obj->isValid = true;
 	sobjects.push_back(obj);
 
 	RenderOrderContainer* container = FindContainer(obj->GetOrder());

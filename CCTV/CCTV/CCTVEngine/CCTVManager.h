@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <glm/glm.hpp>
+#include <thread>
 
 class Tool
 {
@@ -22,6 +23,8 @@ public:
 	virtual void OnSettings(glm::ivec2 screenSize);
 	virtual int GetID();
 	virtual int GetOrder();
+
+	bool isValid = false;
 };
 
 class RenderOrderContainer
@@ -33,7 +36,6 @@ public:
 	int Contains(SObject* obj);
 
 	int orderID;
-private:
 	std::vector<SObject*> objs;
 };
 
@@ -41,6 +43,7 @@ class CCTVManager
 {
 public:
 	static void OnInitialize();
+	static void OnDispose();
 	static void OnMoveableRender();
 	static void OnStaticRender();
 
@@ -65,10 +68,17 @@ private:
 	static Engine::Texture2D* editModeIcon;
 	static Engine::Texture2D* cameraModeIcon;
 	static double settingsStartTime;
+
+
+	static void ValidateThread();
+	static std::thread validateThread;
+	static bool IsMainThreadAlive;
 	
 	static bool isEditting;
 	static bool isSettingsOpen;
 	static float editButtonTime;
+
+	static void UpdateCamera();
 	
 	static void EditButtonToggle();
 

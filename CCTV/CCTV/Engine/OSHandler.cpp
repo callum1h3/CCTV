@@ -25,23 +25,6 @@ std::string OSHandler::GetPath()
 	return PATH;
 }
 
-void OSHandler::MBox(const wchar_t* title, const wchar_t* desc)
-{
-#ifdef _WIN32
-	MessageBox(NULL, (LPCWSTR)desc, (LPCWSTR)title, MB_ICONERROR | MB_OK);
-#endif
-}
-
-bool OSHandler::ErrorCheck(const wchar_t* error)
-{
-	if (wcslen(error) > 8)
-	{
-		MBox(L"An error occurred!", error);
-		return true;
-	}
-	return false;
-}
-
 json OSHandler::LoadJson(const char* path)
 {
 	std::ifstream f(path);
@@ -72,41 +55,4 @@ static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPAR
 	}
 
 	return 0;
-}
-
-std::string OSHandler::BrowseFolder(std::string saved_path)
-{
-	TCHAR path[MAX_PATH];
-
-	const char* path_param = saved_path.c_str();
-
-	BROWSEINFO bi = { 0 };
-	bi.lpszTitle = (LPCWSTR)"Browse for folder...";
-	bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
-	bi.lpfn = BrowseCallbackProc;
-	bi.lParam = (LPARAM)path_param;
-
-	LPITEMIDLIST pidl = SHBrowseForFolder(&bi);
-
-	if (pidl != 0)
-	{
-		//get the name of the folder and put it in path
-		SHGetPathFromIDList(pidl, path);
-
-		//free memory used
-		IMalloc* imalloc = 0;
-		if (SUCCEEDED(SHGetMalloc(&imalloc)))
-		{
-			imalloc->Free(pidl);
-			imalloc->Release();
-		}
-
-
-		TCHAR* pathp = path;
-		std::basic_string<TCHAR> strName = pathp;
-		std::string str(strName.begin(), strName.end());
-		return str;
-	}
-
-	return "";
 }

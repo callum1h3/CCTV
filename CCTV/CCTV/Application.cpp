@@ -49,6 +49,8 @@ void Application::Run()
 		glfwSwapBuffers(window.Get());
 	}
 
+	CCTVManager::OnDispose();
+
 	Engine::Resources::Clear();
 	Engine::Renderer::Dispose();
 	Engine::ShaderManager::OnExit();
