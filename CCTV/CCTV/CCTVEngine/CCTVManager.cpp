@@ -37,6 +37,7 @@ SObject* CCTVManager::selected_object = nullptr;
 
 // Tools
 
+void Tool::OnPickup() {}
 bool Tool::OnPlace(glm::vec2 cursor_position) { return true; }
 void Tool::OnDisplay(glm::vec2 cursor_position) {}
 const char* Tool::GetIcon() { return ""; }
@@ -46,6 +47,7 @@ void SObject::OnDisplay() {}
 void SObject::OnSave() {}
 int SObject::GetID() { return -1; }
 int SObject::GetOrder() { return 0; }
+void SObject::OnDispose() {}
 
 void RenderOrderContainer::Render()
 {
@@ -89,6 +91,14 @@ void CCTVManager::OnDispose()
 {
 	IsMainThreadAlive = false;
 	validateThread.join();
+
+	for (SObject* obj : sobjects)
+	{
+		obj->OnDispose();
+		delete obj;
+	}
+
+	sobjects.clear();
 }
 
 
@@ -133,6 +143,7 @@ void CCTVManager::UpdateCamera()
 			Engine::Texture2D* texture = new Engine::Texture2D();
 			texture->Create(container->width, container->height, GL_RGB);
 			texture->Set((unsigned char*)container->data);
+			texture->SetFlipped(true);
 			texture->SetFilter(GL_LINEAR);
 
 			if (camera->camera_texture != nullptr)
@@ -143,11 +154,13 @@ void CCTVManager::UpdateCamera()
 			}
 
 			camera->camera_texture = texture;
+			camera->OnMDRecieveTexture();
 
-			delete container->data;
 			delete camera->queuedData;
 			camera->queuedData = nullptr;
 		}
+
+		camera->UpdateMotionDetection();
 	}
 }
 
@@ -189,8 +202,7 @@ void CCTVManager::OnStaticRender()
 		glm::vec2 mouse_position = glm::vec2(x, y);
 		selected_tool->OnDisplay(mouse_position);
 		
-		int state = Engine::Input::GetMouse(GLFW_MOUSE_BUTTON_LEFT);
-		if (state == GLFW_PRESS)
+		if (Engine::Input::IsMouseDown(GLFW_MOUSE_BUTTON_LEFT))
 		{
 			if (editButtonTime > Engine::Time::FixedTime())
 				return;
@@ -218,6 +230,7 @@ void CCTVManager::SelectTool(Tool* tool)
 	DeleteTool();
 
 	selected_tool = tool;
+	selected_tool->OnPickup();
 	editButtonTime = Engine::Time::FixedTime() + 1.0f;
 }
 

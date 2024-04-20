@@ -292,24 +292,7 @@ static std::string hi = "hi";
 
 void Renderer::DrawUI()
 {
-	Font font = LoadFont(OSHandler::GetPath() + "/fonts/FiraCode-SemiBold.ttf");
 
-	glm::vec2 min = glm::vec2(0, 0);
-	glm::vec2 max = glm::vec2(min) + glm::vec2(32, 32);
-	glm::vec4 color = glm::vec4(1, 1, 1, 1);
-	if (IsMouseWithinBounds(min, max))
-		color = glm::vec4(0, 1, 1, 1);
-
-
-	Renderer::DrawRect(glm::vec2(0, 0), glm::vec2(32, 32), color);
-
-	Renderer::DrawRect(glm::vec2(128, 0), glm::vec2(32, 32), color);
-
-	//DrawRect(glm::vec2(0, 0), glm::vec2(font.GetTextWidth(0.25f, "Hello"), font.height * 0.25f), glm::vec4(1.0f, 0.1f, 0.1f, 1));
-
-	//DrawTextA(glm::vec2(0, 0), glm::vec4(1,1,1,1), 0.25f, font, "Hello");
-
-	DrawTextInput(glm::vec2(0, 0), 0.25f, &hi, font, 12);
 }
 
 void Renderer::EndRender()
@@ -616,6 +599,7 @@ void Renderer::DrawRect(glm::vec2 position, glm::vec2 size, glm::vec4 color, Tex
 	UIShader->UniformSetVec2(2, position);
 	UIShader->UniformSetVec2(3, size);
 	UIShader->UniformSetVec4(4, color);
+	UIShader->UniformSetBool(5, texture->IsFlipped());
 	UIShader->Use();
 	glBindVertexArray(quadVAO);
 	glActiveTexture(GL_TEXTURE0);

@@ -115,7 +115,6 @@ Shader* ShaderManager::CopyShader(std::string path)
     copy->Copy(shader);
     copy->Compile();
 
-    shader_copies.push_back(copy);
     return copy;
 }
 
@@ -345,6 +344,12 @@ void Shader::UniformSetFloat(unsigned location, float input)
 {
     Use();
     glUniform1f(location, input);
+}
+
+void Shader::UniformSetBool(unsigned location, bool input)
+{
+    Use();
+    glUniform1i(location, input);
 }
 
 void Shader::SetName(std::string name)

@@ -84,6 +84,12 @@
     <ClCompile Include="..\Dependances\include\jpeg-compressor\jpge.cpp">
       <Filter>Source Files\Libs\jpeg-com</Filter>
     </ClCompile>
+    <ClCompile Include="CCTVEngine\SObjects\Rectangle.cpp">
+      <Filter>Source Files\CCTVEngine\SObjects</Filter>
+    </ClCompile>
+    <ClCompile Include="CCTVEngine\SObjects\Text.cpp">
+      <Filter>Source Files\CCTVEngine\SObjects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h">
@@ -133,6 +139,12 @@
     </ClInclude>
     <ClInclude Include="Engine\Macro.h">
       <Filter>Source Files\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="CCTVEngine\SObjects\Rectangle.h">
+      <Filter>Source Files\CCTVEngine\SObjects</Filter>
+    </ClInclude>
+    <ClInclude Include="CCTVEngine\SObjects\Text.h">
+      <Filter>Source Files\CCTVEngine\SObjects</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

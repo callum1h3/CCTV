@@ -48,19 +48,23 @@ void Texture2D::Create(int _width, int _height, GLint data_type)
 	glTexImage2D(GL_TEXTURE_2D, 0, data_type, width, height, 0, data_type, GL_UNSIGNED_BYTE, nullptr);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-	std::cout << buffer << "\n";
-
 	isValid = true;
 }
 
 void Texture2D::Set(unsigned char* data)
 {
+	__data = data;
 	glBindTexture(GL_TEXTURE_2D, buffer);
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 	glTexImage2D(GL_TEXTURE_2D, 0, dataType, width, height, 0, dataType, GL_UNSIGNED_BYTE, data);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	glGenerateMipmap(buffer);
+}
+
+unsigned char* Texture2D::GetData()
+{
+	return __data;
 }
 
 void Texture2D::SetFilter(GLint param)
@@ -73,6 +77,13 @@ void Texture2D::SetFilter(GLint param)
 
 void Texture2D::Dispose()
 {
+	if (!isValid)
+		return;
+
+	if (__data != nullptr)
+		delete __data;
+
+	isValid = false;
 	glDeleteTextures(1, &buffer);
 }
 
@@ -94,4 +105,14 @@ int Texture2D::GetHeight()
 bool Texture2D::IsValid()
 {
 	return isValid;
+}
+
+void Texture2D::SetFlipped(bool s)
+{
+	isFlipped = s;
+}
+
+bool Texture2D::IsFlipped()
+{
+	return isFlipped;
 }

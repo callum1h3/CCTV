@@ -42,6 +42,7 @@ namespace Engine
 		void UniformSetVec3(unsigned location, glm::vec3 input);
 		void UniformSetVec4(unsigned location, glm::vec4 input);
 		void UniformSetFloat(unsigned location, float input);
+		void UniformSetBool(unsigned location, bool input);
 
 		std::vector<ShaderProgram> programs;
 	private:

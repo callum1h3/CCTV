@@ -10,6 +10,7 @@
 class Tool
 {
 public:
+	virtual void OnPickup();
 	virtual const char* GetIcon();
 	virtual bool OnPlace(glm::vec2 cursor_position);
 	virtual void OnDisplay(glm::vec2 cursor_position);
@@ -23,6 +24,7 @@ public:
 	virtual void OnSettings(glm::ivec2 screenSize);
 	virtual int GetID();
 	virtual int GetOrder();
+	virtual void OnDispose();
 
 	bool isValid = false;
 };
@@ -56,7 +58,6 @@ public:
 
 	static SObject* selected_object;
 
-private:
 	static std::vector<SObject*> sobjects;
 	static std::vector<SObject*> sObjectTypes;
 	static std::vector<RenderOrderContainer*> render_order;

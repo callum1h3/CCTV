@@ -18,11 +18,18 @@ namespace Engine
         int GetHeight();
         bool IsValid();
         void SetFilter(GLint param);
+
+        void SetFlipped(bool s);
+        bool IsFlipped();
+
+        unsigned char* GetData();
     private:
         int width, height;
         GLint dataType;
         unsigned int buffer;
         bool isValid = false;
+        bool isFlipped = false;
+        unsigned char* __data;
     };
 
 }

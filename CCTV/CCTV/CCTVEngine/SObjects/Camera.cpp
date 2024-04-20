@@ -3,6 +3,7 @@
 #include "../../Engine/Input.h"
 #include "../../Engine/OSHandler.h"
 #include "../../Engine/Time.h"
+#include "../../Application.h"
 #include <sstream>
 #include <fstream>
 #include "jpeg-compressor/jpgd.h"
@@ -219,6 +220,8 @@ void SCamera::GatherImageThread(SCamera* target, std::string target_ip)
 
 						if (frame_buffer.size() > 0)
 						{
+							//std::cout << "Compiled Frame!\n";
+
 							finishedFrameInPacket = true;
 							frame_buffer[0] = ff;
 							frame_buffer[1] = d8;
@@ -268,9 +271,9 @@ void SCamera::GatherImageThread(SCamera* target, std::string target_ip)
 		Sleep(0.5f);
 	}
 
+	std::cout << "Cleaning up socket thread!\n";
 	closesocket(socket);
 	target->isRetrievingCamera = false;
-	std::cout << "Cleaning up socket thread!\n";
 }
 
 void SCamera::GenerateImage()
@@ -285,7 +288,6 @@ void SCamera::GenerateImage()
 		return;
 	isRetrievingCamera = true;
 
-	std::string current_ip = ip;
 	camera_thread = std::thread(GatherImageThread, this, ip);
 	camera_thread.detach();
 }
@@ -323,6 +325,7 @@ void SCamera::Validate()
 
 		if (!validCamera && !errorWithCamera)
 		{
+			std::cout << "Installing dependances onto device!\n";
 			std::string command = std::string("python " + Engine::OSHandler::GetPath() + "/python/setup.py " + ip + " raspberry pi");
 			system(command.c_str());
 
@@ -330,6 +333,7 @@ void SCamera::Validate()
 			//system(start_upcommand.c_str());
 
 
+			std::cout << "Checking if device is online!\n";
 			// Checks if the camera is up three times then gives up
 			for (int i = 0; i < 8; i++)
 			{
@@ -377,27 +381,117 @@ bool SCamera::IsUseable()
 	return validCamera && validIP;
 }
 
+void SCamera::UpdateWindow()
+{
+	if (window == nullptr)
+		return;
+
+	if (window->ShouldClose())
+	{
+		window->Close();
+		delete window;
+		window = nullptr;
+		return;
+	}
+
+	Engine::Texture2D* _camera_tex = GetTexture();
+
+	window->MakeCurrentContext();
+	window->PollEvents();
+
+	glClearColor(1, 0, 0, 1);
+	glClear(GL_COLOR_BUFFER_BIT);
+	glViewport(0, 0, window->GetSize().x, window->GetSize().y);
+
+
+	if (window->texture != _camera_tex)
+	{
+		if (window->texture != nullptr)
+		{
+			window->DeleteTexture();
+			window->MakeCurrentContext();
+			window->texture = nullptr;
+		}
+
+		unsigned char* data = _camera_tex->GetData();
+
+		if (data == nullptr)
+			std::cout << "Window Recieved NULL Data!\n";
+	
+		glGenTextures(1, &window->self_texture);
+		glBindTexture(GL_TEXTURE_2D, window->self_texture);
+		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, _camera_tex->GetWidth(), _camera_tex->GetHeight(), 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+		glBindTexture(GL_TEXTURE_2D, window->self_texture);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+		window->texture = _camera_tex;
+	}
+
+	if (window->self_texture != -1)
+	{
+		glm::vec2 image_size = glm::vec2(_camera_tex->GetWidth(), _camera_tex->GetHeight());
+		
+		window->shader->Use();
+		glUniform1i(window->shader->UniformGetLocation("cameraTexture"), 0);
+		window->shader->UniformSetVec2(10, window->GetSize());
+		window->shader->UniformSetVec2(11, image_size);
+		glBindVertexArray(window->vao);
+		glDisable(GL_DEPTH_TEST);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, window->self_texture);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+	}
+
+	glfwSwapBuffers(window->Get());
+	
+	Application::GetWindow()->MakeCurrentContext();
+}
+
 void SCamera::OnDisplay()
 {
+	// Update Window
+	UpdateWindow();
+
 	if (camera_icon == nullptr)
 		camera_icon = Engine::Resources::Load<Engine::Texture2D>("camera.png");
 
 	glm::vec2 size = glm::vec2(CAMERA_ICON_SIZE, CAMERA_ICON_SIZE);
 	if (Engine::Renderer::IsMouseWithinBounds(position, position + size))
 	{
-		Engine::Texture2D* _camera_tex = GetTexture();
-
-		if (_camera_tex != nullptr)
+		if (!CCTVManager::isEditting)
 		{
-			Engine::Renderer::DrawRect(position + size, size * 4.0f, glm::vec4(1, 1, 1, 1), _camera_tex);
+			Engine::Texture2D* _camera_tex = GetTexture();
+
+			if (_camera_tex != nullptr)
+			{
+				float cwidth = (float)_camera_tex->GetWidth();
+				float cheight = (float)_camera_tex->GetHeight();
+				float cwidthratio = cwidth / cheight;
+				float cheightratio = cheight / cwidth;
+				glm::vec2 csize = glm::vec2(cwidthratio * 400, cheightratio * 400);
+				glm::vec2 rect_position = position + glm::vec2(size.x / 2, size.y * 1.5f) + glm::vec2(csize.x * -0.5f, 0);
+
+				Engine::Renderer::DrawRect(rect_position - glm::vec2(2, 2), csize + glm::vec2(4,4), glm::vec4(1, 1, 1, 1));
+				Engine::Renderer::DrawRect(rect_position, csize, glm::vec4(1, 1, 1, 1), _camera_tex);
+			}
 		}
 
 		Engine::Renderer::DrawRect(position, size, glm::vec4(1, 1, 1, .2));
 
 		if (Engine::Input::IsMouseDown(GLFW_MOUSE_BUTTON_LEFT) && !CCTVManager::IsSettingsOpen())
 		{
-			CCTVManager::selected_object = this;
-			CCTVManager::SettingsToggle();
+			if (CCTVManager::isEditting)
+			{
+				CCTVManager::selected_object = this;
+				CCTVManager::SettingsToggle();
+			}
+			else
+				OpenWindow();
 		}
 		
 	}
@@ -409,6 +503,113 @@ void SCamera::OnDisplay()
 		col = glm::vec4(1, 1, 1, 1);
 
 	Engine::Renderer::DrawRect(position, size, col, camera_icon);
+}
+
+void SCamera::OnDispose()
+{
+	if (camera_texture != nullptr)
+		camera_texture->Dispose();
+	
+	if (window != nullptr)
+	{
+		window->Close();
+		delete window;
+		window = nullptr;
+	}
+}
+
+// Queues image to be motion detected.
+void SCamera::UpdateMotionDetection()
+{
+	double t = Engine::Time::FixedTime();
+
+	if (greyscaleCooldown > t)
+		return;
+
+	GetTexture();
+
+	//greyscaleCooldown = t + 5;
+	//camera_texutre_greyscaled
+
+	//camera_texutre_greyscaled
+
+	//std::vector<char> new_greyscaled;
+}
+
+#include <iomanip>
+#include <ctime>
+#include "jpeg-compressor/jpge.h"
+
+void SCamera::OnMDRecieveTexture()
+{
+	double t = Engine::Time::FixedTime();
+	if (greyscaleCooldown > t)
+		return;
+
+	// Puts a cooldown on motion detection
+
+	Engine::Texture2D* texture = GetTexture();
+	if (texture == nullptr)
+		return;
+
+	int pixel_count = texture->GetWidth() * texture->GetHeight();
+	unsigned char* texture_data = texture->GetData();
+	std::vector<char> new_greyscaled;
+
+	bool existingFrame = (camera_texutre_greyscaled.size() > 0) && (texture->GetWidth() == lastGSWidth) && (texture->GetHeight() == lastGSHeight);
+
+	double averageDifference = 0;
+	for (int i = 0; i < pixel_count; i++)
+	{
+		int index = i * 3;
+
+		char r = texture_data[i];
+		char g = texture_data[i + 1];
+		char b = texture_data[i + 2];
+
+		char grey = (0.11 * r) + (0.59 * g) + (0.3 * b);
+		if (existingFrame)
+		{
+			double difference = glm::abs((double)camera_texutre_greyscaled[i] - (double)grey);
+			averageDifference += difference;
+		}
+		new_greyscaled.push_back(grey);
+
+	}
+
+	if (existingFrame)
+	{
+		float a = averageDifference / new_greyscaled.size();
+		if (a > 10)
+		{
+			greyscaleCooldown = t + 1.0f;
+			lastMovementDetected = t;
+
+			auto _t = std::time(nullptr);
+			auto tm = *std::localtime(&_t);
+
+			std::ostringstream oss;
+			oss << std::put_time(&tm, "%d-%m-%Y %H-%M-%S");
+			auto str = oss.str();
+
+			std::string camera_path = Engine::OSHandler::GetPath() + "/camera/" + ip + "/";
+			std::filesystem::create_directories(camera_path);
+
+			jpge::compress_image_to_jpeg_file((camera_path + str + ".jpeg").c_str(), texture->GetWidth(), texture->GetHeight(), 3, texture_data);
+		}
+		else
+			greyscaleCooldown = t + 8;
+	}
+	else
+		greyscaleCooldown = t + 8;
+
+	camera_texutre_greyscaled.clear();
+	camera_texutre_greyscaled = new_greyscaled;
+	lastGSWidth = texture->GetWidth();
+	lastGSHeight = texture->GetHeight();
+	
+
+
 }
 
 void SCamera::OnSave()
@@ -425,6 +626,83 @@ int SCamera::GetID()
 int SCamera::GetOrder()
 {
 	return 1;
+}
+
+bool SCamera::IsLastCheckedIPCurrent()
+{
+	return ip == lastCheckedIP;
+}
+
+const float screenQuadVertices[] = {
+	// positions   // texCoords
+	-1.0f,  1.0f,  0.0f, 1.0f,
+	-1.0f, -1.0f,  0.0f, 0.0f,
+	 1.0f, -1.0f,  1.0f, 0.0f,
+
+	-1.0f,  1.0f,  0.0f, 1.0f,
+	 1.0f, -1.0f,  1.0f, 0.0f,
+	 1.0f,  1.0f,  1.0f, 1.0f
+};
+
+const float quadVertices[] = { // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
+	// positions   // texCoords
+	0,  1.0f,  0.0f, 1.0f,
+	0, 0,  0.0f, 0.0f,
+	 1.0f, 0,  1.0f, 0.0f,
+
+	0,  1.0f,  0.0f, 1.0f,
+	 1.0f, 0,  1.0f, 0.0f,
+	 1.0f,  1.0f,  1.0f, 1.0f
+};
+
+
+
+void SCamera::OpenWindow()
+{
+	if (window != nullptr)
+		return;
+
+	if (!validCamera)
+		return;
+
+	if (!IsLastCheckedIPCurrent())
+		return;
+
+	window = new CameraWindow();
+	window->Init();
+	window->SetWindowName(ip.c_str());
+	window->MakeCurrentContext();
+
+	// Creating Screen Quad Buffer
+	glGenVertexArrays(1, &window->vao);
+	glGenBuffers(1, &window->vbo);
+	glBindVertexArray(window->vao);
+	glBindBuffer(GL_ARRAY_BUFFER, window->vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(screenQuadVertices), &screenQuadVertices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+
+	Engine::Shader* shader = Engine::ShaderManager::CopyShader("cameraview");
+	window->shader = shader;
+
+	Application::GetWindow()->MakeCurrentContext();
+}
+
+void CameraWindow::DeleteTexture()
+{
+	MakeCurrentContext();
+	if (self_texture != -1)
+		glDeleteTextures(1, &self_texture);
+	self_texture = -1;
+	Application::GetWindow()->MakeCurrentContext();
+}
+
+void CameraWindow::Close()
+{
+	DeleteTexture();
+	Dispose();
 }
 
 ADD_TOOL(new CameraTool());
