@@ -8,7 +8,7 @@ host = sys.argv[1]
 username = sys.argv[2]
 password = sys.argv[3]
 
-commandsold = [
+commands = [
    "sudo apt-get --assume-yes install python3",
     "sudo apt-get --assume-yes install git-all",
     "sudo apt-get --assume-yes install screen",
@@ -20,11 +20,6 @@ commandsold = [
     "pip3 install threading",
     "pip3 install http",
     "git clone https://github.com/callum1h3/bookish-doodle",
-    "screen -d -m python3 bookish-doodle/camera.py &"
-]
-
-
-commands = [
     "screen -d -m python3 bookish-doodle/camera.py &"
 ]
 

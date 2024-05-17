@@ -185,18 +185,23 @@ void SCamera::GatherImageThread(SCamera* target, std::string target_ip)
 	std::vector<char> frame_buffer;
 	bool previousFF = false;
 
+	// Marker Cache
 	char ff = 0xFF;
 	char d8 = 0xD8;
 	char d9 = 0xD9;
 
+
+	// FPS Settings
 	float tickSpeed = 24;
 	float sleepTime = (1.0f / tickSpeed) / 1000.0f;
 
 	std::cout << "Successfully connected to socket!\n";
 	while (target->ShouldBeGenerating(target_ip) && socket != INVALID_SOCKET)
 	{
+		// Recieving Buffer Data
 		int valread = recv(socket, buffer, 8192 - 1, 0);
 
+		// Checks if the stream has ended.
 		if (valread > 0)
 		{
 			bool finishedFrameInPacket = false;
@@ -206,6 +211,7 @@ void SCamera::GatherImageThread(SCamera* target, std::string target_ip)
 
 				if (previousFF)
 				{
+					// Checking for the start marker
 					if (character == d8)
 					{
 						// Start
@@ -213,6 +219,7 @@ void SCamera::GatherImageThread(SCamera* target, std::string target_ip)
 						frame_buffer.clear();
 					}
 
+					// Checking for the end marker
 					if (character == d9)
 					{
 						// Frame End
@@ -220,14 +227,15 @@ void SCamera::GatherImageThread(SCamera* target, std::string target_ip)
 
 						if (frame_buffer.size() > 0)
 						{
-							//std::cout << "Compiled Frame!\n";
-
 							finishedFrameInPacket = true;
+							// Swapping the markers because for some reason stream is corrupted.
 							frame_buffer[0] = ff;
 							frame_buffer[1] = d8;
 
 							frame_buffer.push_back(character);
 
+
+							// Converting jpeg to RGB array.
 							int width, height, comps;
 							unsigned char* data = jpgd::decompress_jpeg_image_from_memory((unsigned char*)&frame_buffer[0], frame_buffer.size(), &width, &height, &comps, 3);
 
@@ -237,6 +245,7 @@ void SCamera::GatherImageThread(SCamera* target, std::string target_ip)
 							}
 							else if (data != nullptr)
 							{
+								// Sending data back to the main thread.
 								ImageData* container = new ImageData();
 								container->width = width;
 								container->height = height;
@@ -245,14 +254,6 @@ void SCamera::GatherImageThread(SCamera* target, std::string target_ip)
 
 								target->queuedData = container;
 							}
-
-							//std::ofstream myfile;
-							//myfile.open(Engine::OSHandler::GetPath() + "/aaaa.jpeg", std::ios::binary);
-
-							//copy(frame_buffer.cbegin(), frame_buffer.cend(),
-							//	std::ostreambuf_iterator<char>(myfile));
-
-							//myfile.close();
 						}
 					}
 
